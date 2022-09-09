@@ -17,35 +17,35 @@ describe("Create User Controller", () => {
         await connection.close();
     });
 
-    it("Should be able create new user", async () => {
-        const response = await request(app)
-        .post("/api/v1/users")
-        .send({
-            name: "John Doe",
-            email: "john.doe@gmail.com",
-            password: "john@2022"
-        });
-        
-        expect(response.status).toBe(201);
-    });
-
-    it("Should not be able create new user with same email", async () => {
+    it("Should be able list profile user",async () => {
         await request(app)
         .post("/api/v1/users")
         .send({
             name: "John Doe",
             email: "john.doe@gmail.com",
             password: "john@2022"
-        }); 
+        })
+        .expect(201); 
 
-        const response = await request(app)
-        .post("/api/v1/users")
+        const session =  await request(app)
+        .post("/api/v1/sessions")
         .send({
-            name: "John Doe",
             email: "john.doe@gmail.com",
             password: "john@2022"
-        });
+        })
+        .expect(200); 
 
-        expect(response.status).toBe(400);
+        const { token } = session.body;
+
+        const response = await request(app)
+        .get("/api/v1/profile")
+        .set({
+            Authorization: `Bearer ${token as string}`, 
+        })
+        .expect(200);
+
+        expect(response.body).toHaveProperty("id");
+        expect(response.body.name).toMatch("John Doe");
+        
     });
 })
